@@ -13,7 +13,14 @@
 const uint16_t kServerPort = 9001;
 const int kBackLog = 128;
 
+// Exit infinite accept-loop when Ctrl+C is pressed.
+int g_interupted = 0;
+
 typedef void (*SigFunc)(int signo);
+
+void SigInt(int signo) {
+  g_interupted = 1;
+}
 
 void SigChild(int signo) {
   pid_t pid;
@@ -29,13 +36,13 @@ void SigChild(int signo) {
   }
 }
 
-SigFunc BindSignal(int signo, SigFunc func) {
+SigFunc BindSignal(int signo, SigFunc func, int restart) {
   struct sigaction act, old_act;
   act.sa_handler = func;
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
   // Restart accept() when it is interrupted.
-  if (signo != SIGALRM) {
+  if (signo != SIGALRM && restart != 0) {
     act.sa_flags |= SA_RESTART;
   }
 
@@ -121,17 +128,28 @@ int main(void) {
     exit(EXIT_FAILURE);
   }
 
-  BindSignal(SIGCHLD, SigChild);
+  // Release children.
+  BindSignal(SIGCHLD, SigChild, 1);
+
+  // Update flag on Ctrl+C pressed.
+  BindSignal(SIGINT, SigInt, 0);
 
   for ( ; ; ) {
     struct sockaddr_in client_addr;
     socklen_t client_len;
     int conn_fd = accept(sock_fd, (struct sockaddr*) &client_addr, &client_len);
+    printf("conn_fd: %d\n", conn_fd);
     if (conn_fd < 0) {
+      printf("errno: %d\n", errno);
+      if (errno = EINTR && g_interupted != 0) {
+        perror("accept() interrupted by Ctrl+C");
+        break;
+      }
       if (errno == EINTR) {
         // accept() was interrupted.
-        //perror("accept() was interrupted()");
+        perror("accept() was interrupted()");
       } else if (errno == ECONNABORTED) {
+        perror("accept() Got connection aborted");
         // RST was received before accept()
       } else {
         perror("accept()");

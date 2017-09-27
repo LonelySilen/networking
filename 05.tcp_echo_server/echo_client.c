@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   server_ip.sin_port = htons(kServerPort);
   inet_pton(AF_INET, argv[1], &server_ip.sin_addr);
 
-  const int kClients = 10;
+  const int kClients = 1;
   int sock_fds[kClients];
   for (int i = 0; i < kClients; i++) {
     sock_fds[i] = socket(AF_INET, SOCK_STREAM, 0);
