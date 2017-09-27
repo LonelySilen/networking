@@ -90,6 +90,19 @@ void StrEcho(int fd) {
   }
 }
 
+void StartWorkerProcessor(int sock_fd) {
+  printf("[child: %ld] inited\n", getpid());
+  fflush(stdout);
+
+  StrEcho(conn_fd);
+  close(conn_fd);
+
+  printf("[child: %ld] terminated\n", getpid());
+  fflush(stdout);
+
+  _exit(EXIT_SUCCESS);
+}
+
 int main(void) {
   int sock_fd;
 
@@ -161,13 +174,7 @@ int main(void) {
       }
       case 0: {
         // child process
-        printf("[child: %ld] inited\n", getpid());
-        fflush(stdout);
-        StrEcho(conn_fd);
-        close(conn_fd);
-        printf("[child: %ld] terminated\n", getpid());
-        fflush(stdout);
-        _exit(EXIT_SUCCESS);
+        StartWorkerProcessor(conn_fd);
       }
       default: {
         // parent process
