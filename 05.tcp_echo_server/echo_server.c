@@ -74,16 +74,17 @@ void StrEcho(int fd) {
       break;
     }
 
-    printf("[child: %ld] %s\n", getpid(), buf);
+    printf("[child: %ld] received: %s\n", getpid(), buf);
     fflush(stdout);
 
-    int arg1, arg2;
-    if (sscanf(buf, "%ld %ld", &arg1, &arg2) == 2) {
+    long arg1, arg2;
+    if (sscanf(buf, "%ld%ld", &arg1, &arg2) == 2) {
+      printf("arg1: %ld, arg2: %ld\n", arg1, arg2);
       snprintf(buf, kBufSize, "%ld\n", arg1 + arg2);
     } else {
       snprintf(buf, kBufSize, "input error\n");
     }
-    printf("[child: %ld] %s\n", getpid(), buf);
+    printf("[child: %ld] send: %s\n", getpid(), buf);
     fflush(stdout);
 
     n = strlen(buf);
