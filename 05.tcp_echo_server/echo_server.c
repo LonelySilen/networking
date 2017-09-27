@@ -131,6 +131,8 @@ int main(void) {
       if (errno == EINTR) {
         // accept() was interrupted.
         //perror("accept() was interrupted()");
+      } else if (errno == ECONNABORTED) {
+        // RST was received before accept()
       } else {
         perror("accept()");
       }
