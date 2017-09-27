@@ -1,6 +1,7 @@
 
 #include <arpa/inet.h>
 #include <netinet/ip.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,13 +9,26 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-const uint16_t kServerPort = 9001;
+#include "common.h"
+
+int g_sig_pipe = 0;
+
+void SigPipe(int signo) {
+  g_sig_pipe = 1;
+}
 
 void StrCli(FILE* input_file, int sock_fd) {
   const size_t kBufSize = 128;
   char send_line[kBufSize], recv_line[kBufSize];
   while (fgets(send_line, kBufSize, input_file) != NULL) {
     write(sock_fd, send_line, strlen(send_line));
+    sleep(10);
+    if (g_sig_pipe != 0) {
+      return;
+    }
+
+    write(sock_fd, send_line, strlen(send_line));
+
     if (read(sock_fd, recv_line, kBufSize) <= 0) {
       perror("read()");
       return;
@@ -54,7 +68,10 @@ int main(int argc, char** argv) {
     }
   }
 
+  BindSignal(SIGPIPE, SigPipe, 0);
+
   StrCli(stdin, sock_fds[0]);
+  close(sock_fds[0]);
 
   exit(EXIT_SUCCESS);
 }

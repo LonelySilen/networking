@@ -10,13 +10,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-const uint16_t kServerPort = 9001;
-const int kBackLog = 128;
+#include "common.h"
 
 // Exit infinite accept-loop when Ctrl+C is pressed.
 int g_interupted = 0;
-
-typedef void (*SigFunc)(int signo);
 
 void SigInt(int signo) {
   g_interupted = 1;
@@ -34,23 +31,6 @@ void SigChild(int signo) {
     fprintf(stdout, "[parent] child %ld terminated\n", pid);
     fflush(stdout);
   }
-}
-
-SigFunc BindSignal(int signo, SigFunc func, int restart) {
-  struct sigaction act, old_act;
-  act.sa_handler = func;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  // Restart accept() when it is interrupted.
-  if (signo != SIGALRM && restart != 0) {
-    act.sa_flags |= SA_RESTART;
-  }
-
-  if (sigaction(signo, &act, &old_act) < 0) {
-    perror("sigaction()");
-    return SIG_ERR;
-  }
-  return old_act.sa_handler;
 }
 
 ssize_t Writen(int fd, const char* vptr, size_t n) {
@@ -123,6 +103,7 @@ int main(void) {
     exit(EXIT_FAILURE);
   }
 
+  const int kBackLog = 128;
   if (listen(sock_fd, kBackLog) < 0) {
     perror("listen()");
     exit(EXIT_FAILURE);
