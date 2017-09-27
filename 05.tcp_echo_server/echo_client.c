@@ -31,12 +31,6 @@ int main(int argc, char** argv) {
     fprintf(stderr, "usage: %s ip-address\n", argv[0]);
     exit(EXIT_FAILURE);
   }
-  int sock_fd;
-  sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock_fd < 0) {
-    perror("socket()");
-    exit(EXIT_FAILURE);
-  }
 
   struct sockaddr_in server_ip;
   memset(&server_ip, 0, sizeof(server_ip));
@@ -44,14 +38,23 @@ int main(int argc, char** argv) {
   server_ip.sin_port = htons(kServerPort);
   inet_pton(AF_INET, argv[1], &server_ip.sin_addr);
 
-  if (connect(sock_fd, (const struct sockaddr*) &server_ip,
-        sizeof(server_ip)) < 0) {
-    perror("connect()");
-    exit(EXIT_FAILURE);
+  const int kClients = 10;
+  int sock_fds[kClients];
+  for (int i = 0; i < kClients; i++) {
+    sock_fds[i] = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock_fds[i] < 0) {
+      perror("socket()");
+      exit(EXIT_FAILURE);
+    }
+
+    if (connect(sock_fds[i], (const struct sockaddr*) &server_ip,
+          sizeof(server_ip)) < 0) {
+      perror("connect()");
+      exit(EXIT_FAILURE);
+    }
   }
 
-  StrCli(stdin, sock_fd);
-  close(sock_fd);
+  StrCli(stdin, sock_fds[0]);
 
   exit(EXIT_SUCCESS);
 }

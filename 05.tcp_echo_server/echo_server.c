@@ -16,12 +16,14 @@ const int kBackLog = 128;
 typedef void (*SigFunc)(int signo);
 
 void SigChild(int signo) {
-  pid_t pid;
-  int stat;
-  pid = wait(&stat);
+  waitpid(-1);
+  //wait(NULL);
+  //pid_t pid;
+  //int stat;
+  //pid = wait(&stat);
   // TODO(LiuLang): Do not print message in signal handler.
-  printf("[parent] child %ld terminated\n", pid);
-  return;
+  //fprintf(stdout, "[parent] child %ld terminated\n", pid);
+  //fflush(stdout);
 }
 
 SigFunc BindSignal(int signo, SigFunc func) {
