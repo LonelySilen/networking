@@ -3,4 +3,4 @@ project(unp)
 
 set(CMAKE_C_STANDARD 11)
 
-include_directories(intro)
+add_subdirectory(intro)
