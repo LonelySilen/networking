@@ -15,8 +15,15 @@
 // Exit infinite accept-loop when Ctrl+C is pressed.
 int g_interupted = 0;
 
+// Close socket and all children.
+int g_terminated = 0;
+
 void SigInt(int signo) {
   g_interupted = 1;
+}
+
+void SigTerm(int signo) {
+  g_terminated = 1;
 }
 
 void SigChild(int signo) {
@@ -112,8 +119,12 @@ int main(void) {
   // Release children.
   BindSignal(SIGCHLD, SigChild, 1);
 
+  BindSignal(SIGTERM, SigTerm, 0);
+
   // Update flag on Ctrl+C pressed.
   BindSignal(SIGINT, SigInt, 0);
+
+  printf("[parent] %ld\n", getpid());
 
   for ( ; ; ) {
     struct sockaddr_in client_addr;
@@ -122,7 +133,11 @@ int main(void) {
     printf("conn_fd: %d\n", conn_fd);
     if (conn_fd < 0) {
       printf("errno: %d\n", errno);
-      if (errno = EINTR && g_interupted != 0) {
+      if (g_terminated != 0) {
+        perror("accept() terminated");
+        break;
+      }
+      if (g_interupted != 0) {
         perror("accept() interrupted by Ctrl+C");
         break;
       }
