@@ -76,6 +76,17 @@ void StrEcho(int fd) {
 
     printf("[child: %ld] %s\n", getpid(), buf);
     fflush(stdout);
+
+    int arg1, arg2;
+    if (sscanf(buf, "%ld %ld", &arg1, &arg2) == 2) {
+      snprintf(buf, kBufSize, "%ld\n", arg1 + arg2);
+    } else {
+      snprintf(buf, kBufSize, "input error\n");
+    }
+    printf("[child: %ld] %s\n", getpid(), buf);
+    fflush(stdout);
+
+    n = strlen(buf);
     Writen(fd, buf, n);
     memset(buf, 0, kBufSize);
 
@@ -90,7 +101,7 @@ void StrEcho(int fd) {
   }
 }
 
-void StartWorkerProcessor(int sock_fd) {
+void StartWorkerProcessor(int conn_fd) {
   printf("[child: %ld] inited\n", getpid());
   fflush(stdout);
 

@@ -22,12 +22,9 @@ void StrCli(FILE* input_file, int sock_fd) {
   char send_line[kBufSize], recv_line[kBufSize];
   while (fgets(send_line, kBufSize, input_file) != NULL) {
     write(sock_fd, send_line, strlen(send_line));
-    sleep(10);
     if (g_sig_pipe != 0) {
       return;
     }
-
-    write(sock_fd, send_line, strlen(send_line));
 
     if (read(sock_fd, recv_line, kBufSize) <= 0) {
       perror("read()");
