@@ -1,13 +1,45 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 const uint16_t kServerPort = 9001;
 const int kBackLog = 128;
+
+typedef void (*SigFunc)(int signo);
+
+void SigChild(int signo) {
+  pid_t pid;
+  int stat;
+  pid = wait(&stat);
+  // TODO(LiuLang): Do not print message in signal handler.
+  printf("[parent] child %ld terminated\n", pid);
+  return;
+}
+
+SigFunc BindSignal(int signo, SigFunc func) {
+  struct sigaction act, old_act;
+  act.sa_handler = func;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
+  // Restart accept() when it is interrupted.
+  if (signo != SIGALRM) {
+    act.sa_flags |= SA_RESTART;
+  }
+
+  if (sigaction(signo, &act, &old_act) < 0) {
+    perror("sigaction()");
+    return SIG_ERR;
+  }
+  return old_act.sa_handler;
+}
 
 ssize_t Writen(int fd, const char* vptr, size_t n) {
   size_t nleft;
@@ -84,12 +116,19 @@ int main(void) {
     exit(EXIT_FAILURE);
   }
 
+  BindSignal(SIGCHLD, SigChild);
+
   for ( ; ; ) {
     struct sockaddr_in client_addr;
     socklen_t client_len;
     int conn_fd = accept(sock_fd, (struct sockaddr*) &client_addr, &client_len);
     if (conn_fd < 0) {
-      perror("accept()");
+      if (errno == EINTR) {
+        // accept() was interrupted.
+        //perror("accept() was interrupted()");
+      } else {
+        perror("accept()");
+      }
       continue;
     }
 
