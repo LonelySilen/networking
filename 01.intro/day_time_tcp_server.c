@@ -12,7 +12,7 @@
 
 #include "day_time_tcp.h"
 
-int main(int argc, char** argv) {
+int main(void) {
   char buf[MAX_LINE];
 
   int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -53,4 +53,6 @@ int main(int argc, char** argv) {
 
     close(connect_fd);
   }
+
+  exit(EXIT_SUCCESS);
 }
