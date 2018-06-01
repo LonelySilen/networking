@@ -25,7 +25,7 @@ int main(void) {
     perror("inet_aton(client_ip)");
     exit(EXIT_FAILURE);
   }
-  printf("address of client_ip: %ld\n", client_ip.sin_addr.s_addr);
+  printf("address of client_ip: %u\n", client_ip.sin_addr.s_addr);
 
   if (bind(sock_fd, (const struct sockaddr*) &client_ip,
            sizeof(client_ip)) == -1) {
@@ -42,7 +42,7 @@ int main(void) {
     perror("inet_aton()");
     exit(EXIT_FAILURE);
   }
-  printf("address of server_ip: %ld\n", server_ip.sin_addr.s_addr);
+  printf("address of server_ip: %u\n", server_ip.sin_addr.s_addr);
 
   if (connect(sock_fd, (const struct sockaddr*) &server_ip,
               sizeof(server_ip)) == -1) {
