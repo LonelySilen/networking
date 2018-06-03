@@ -14,6 +14,7 @@
 int g_sig_pipe = 0;
 
 void SigPipe(int signo) {
+  (void) signo;
   g_sig_pipe = 1;
 }
 

@@ -19,14 +19,18 @@ int g_interupted = 0;
 int g_terminated = 0;
 
 void SigInt(int signo) {
+  (void) signo;
   g_interupted = 1;
 }
 
 void SigTerm(int signo) {
+  (void) signo;
   g_terminated = 1;
 }
 
 void SigChild(int signo) {
+  (void) signo;
+
   pid_t pid;
   int stat;
   // Call waitpid() within a loop, fetching the status of any of children
@@ -35,7 +39,7 @@ void SigChild(int signo) {
   // that have not yet terminated.
   while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {
     // TODO(LiuLang): Do not print message in signal handler.
-    fprintf(stdout, "[parent] child %ld terminated\n", pid);
+    fprintf(stdout, "[parent] child %d terminated\n", pid);
     fflush(stdout);
   }
 }
@@ -74,7 +78,7 @@ void StrEcho(int fd) {
       break;
     }
 
-    printf("[child: %ld] received: %s\n", getpid(), buf);
+    printf("[child: %d] received: %s\n", getpid(), buf);
     fflush(stdout);
 
     long arg1, arg2;
@@ -84,7 +88,7 @@ void StrEcho(int fd) {
     } else {
       snprintf(buf, kBufSize, "input error\n");
     }
-    printf("[child: %ld] send: %s\n", getpid(), buf);
+    printf("[child: %d] send: %s\n", getpid(), buf);
     fflush(stdout);
 
     n = strlen(buf);
@@ -103,13 +107,13 @@ void StrEcho(int fd) {
 }
 
 void StartWorkerProcessor(int conn_fd) {
-  printf("[child: %ld] inited\n", getpid());
+  printf("[child: %d] inited\n", getpid());
   fflush(stdout);
 
   StrEcho(conn_fd);
   close(conn_fd);
 
-  printf("[child: %ld] terminated\n", getpid());
+  printf("[child: %d] terminated\n", getpid());
   fflush(stdout);
 
   _exit(EXIT_SUCCESS);
@@ -149,7 +153,7 @@ int main(void) {
   // Update flag on Ctrl+C pressed.
   BindSignal(SIGINT, SigInt, 0);
 
-  printf("[parent] %ld\n", getpid());
+  printf("[parent] %d\n", getpid());
 
   for ( ; ; ) {
     struct sockaddr_in client_addr;
