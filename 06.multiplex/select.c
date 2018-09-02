@@ -52,7 +52,7 @@ int main(void) {
   } else if (state == 0) {
     printf("No data to read\n");
   } else {
-    printf("Data is availabel: %d\n", state);
+    printf("Data is available: %d\n", state);
     if (FD_ISSET(STDIN_FILENO, &read_set)) {
       printf("stdin got new data\n");
     }
